@@ -19,7 +19,7 @@ pub const FRACTIONAL_BASE: u128 = 10_000;
 pub const BASE_GAS: Gas = 5_000_000_000_000;
 
 #[ext_contract(token_contract)]
-trait Calculator {
+trait FungibleToken {
     fn ft_transfer(receiver_id: String, amount: String, memo: String);
 }
 
