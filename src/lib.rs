@@ -7,14 +7,21 @@ use near_sdk::{
     env, near_bindgen, AccountId, Balance, Promise,
     collections::{ LookupMap },
     json_types::{ U128 },
-    utils::assert_one_yocto
+    utils::assert_one_yocto, ext_contract
 };
+use near_sdk::Gas;
 
 #[global_allocator]
 static ALLOC: near_sdk::wee_alloc::WeeAlloc = near_sdk::wee_alloc::WeeAlloc::INIT;
 
 // const ONE_NEAR: u128 = 1_000_000_000_000_000_000_000_000;
 pub const FRACTIONAL_BASE: u128 = 10_000;
+pub const BASE_GAS: Gas = 5_000_000_000_000;
+
+#[ext_contract(token_contract)]
+trait Calculator {
+    fn ft_transfer(receiver_id: String, amount: String, memo: String);
+}
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize)]
@@ -48,6 +55,14 @@ impl PeterBot {
         let deposit = env::attached_deposit();
         let receiver_amount = ( deposit * (FRACTIONAL_BASE - self.transfer_fee) ) / FRACTIONAL_BASE;
         Promise::new(receiver).transfer(receiver_amount)
+    }
+
+    pub fn ft_on_transfer(&mut self, sender_id: String, amount: String, msg: String) -> String {
+        let receiver_amount = ( amount.parse::<u128>().unwrap() * (FRACTIONAL_BASE - self.transfer_fee) ) / FRACTIONAL_BASE;
+        let receiver = msg;
+        token_contract::ft_transfer(receiver, receiver_amount.to_string(), "penis".to_string(), 
+                            &env::predecessor_account_id(), 0, BASE_GAS);
+        "0".to_string()
     }
     
     #[payable]
